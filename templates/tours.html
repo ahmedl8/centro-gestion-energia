@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+      <section class="card kpi" style="max-width:340px;">
+        <div class="kpi-head"><span class="ico bg-blue">📅</span> TOURS PROGRAMADOS HOY</div>
+        <div class="kpi-main"><span id="kpiToursDia">—</span><span class="unit">/ día</span></div>
+        <div class="kpi-sub" id="kpiCadaMin">Cada — min</div>
+        <div class="kpi-sub2">Horario: <b id="kpiHorario">—</b></div>
+      </section>
+
+      <section class="card tours-card">
+        <div class="card-title-row">
+          <div class="card-title">PRÓXIMOS TOURS PROGRAMADOS <span id="toursHorario">(Horario: —)</span></div>
+        </div>
+        <div class="tours-timeline" id="toursTimeline">
+          <div class="empty-note">Cargando tours…</div>
+        </div>
+        <div class="tours-footer">
+          Duración por tour: <b id="toursDuracion">—</b>
+        </div>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='tours.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEV — Energy Monitor{% if page_title %} · {{ page_title }}{% endif %}</title>
+{% block extra_head %}{% endblock %}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ───────────── SIDEBAR ───────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div>
+        <div class="brand-title">GEV</div>
+        <div class="brand-sub">ENERGY MONITOR</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item {{ 'active' if active_page == 'dashboard' else '' }}" href="{{ url_for('index') }}">
+        <span class="nav-ico">▦</span> Dashboard
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'baterias' else '' }}" href="{{ url_for('baterias') }}">
+        <span class="nav-ico">🔋</span> Baterías
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'tours' else '' }}" href="{{ url_for('tours') }}">
+        <span class="nav-ico">🎥</span> Tours (Cámaras)
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'prevision' else '' }}" href="{{ url_for('prevision') }}">
+        <span class="nav-ico">☁</span> Previsión del tiempo
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'paneles_solares' else '' }}" href="{{ url_for('paneles_solares') }}">
+        <span class="nav-ico">☀</span> Paneles solares
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'historico' else '' }}" href="{{ url_for('historico') }}">
+        <span class="nav-ico">📈</span> Histórico
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'alertas' else '' }}" href="{{ url_for('alertas') }}">
+        <span class="nav-ico">🔔</span> Alertas
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'dispositivos' else '' }}" href="{{ url_for('dispositivos') }}">
+        <span class="nav-ico">📡</span> Dispositivos
+      </a>
+      <a class="nav-item {{ 'active' if active_page == 'configuracion' else '' }}" href="{{ url_for('configuracion') }}">
+        <span class="nav-ico">⚙</span> Configuración
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="current-install">
+        <div class="ci-label">INSTALACIÓN ACTUAL</div>
+        <div class="ci-name">📍 <span id="sbInstNombre">—</span></div>
+        <div class="ci-cam" id="sbCamNombre">—</div>
+      </div>
+      <button class="btn-outline" id="btnCambiarInstalacion">⇄ Cambiar instalación</button>
+    </div>
+  </aside>
+
+  <!-- ───────────── MAIN ───────────── -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span id="bcInstalacion">Cargando…</span>
+        <span class="chev">›</span>
+        <span id="bcCamara">—</span>
+        <span class="badge" id="badgeOnline">…</span>
+      </div>
+      <div class="topbar-right">
+        <div class="last-update">
+          Última actualización: <b id="lastUpdateTime">—</b> &nbsp;|&nbsp; <span id="lastUpdateDate">—</span>
+        </div>
+        <button class="icon-btn" id="btnRefresh" title="Actualizar">⟳</button>
+        <div class="icon-btn bell">🔔<span class="dot" id="alertDot" hidden></span></div>
+      </div>
+    </header>
+
+    <div id="content" class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<!-- SELECTOR MODAL (compartido por todas las páginas) -->
+<div class="modal-overlay" id="selectorOverlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <div>Cambiar instalación / cámara</div>
+      <button class="icon-btn" id="btnCloseSelector">✕</button>
+    </div>
+    <div class="modal-body" id="selectorBody">Cargando…</div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

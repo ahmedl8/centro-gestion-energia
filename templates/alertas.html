@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+      <section class="card">
+        <div class="card-title-row">
+          <div class="card-title">ALERTAS — TODAS LAS INSTALACIONES</div>
+          <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-dim);">
+            <input type="checkbox" id="soloProblemas" checked> Mostrar solo problemas
+          </label>
+        </div>
+        <table class="energy-table" id="tablaAlertas">
+          <thead>
+            <tr>
+              <th>Estado</th><th>Instalación</th><th>Cámara</th>
+              <th>SoC</th><th>Última actualización</th>
+            </tr>
+          </thead>
+          <tbody id="tablaAlertasBody">
+            <tr><td colspan="5" class="empty-note">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='alertas.js') }}"></script>
+{% endblock %}

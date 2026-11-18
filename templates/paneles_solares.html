@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+      <section class="bottom-row" style="grid-template-columns:1fr 1fr;">
+        <div class="card">
+          <div class="card-title">CONFIGURACIÓN SOLAR</div>
+          <ul class="detail-list">
+            <li><span>Potencia del panel</span><b id="sPotencia">—</b></li>
+            <li><span>Azimut (orientación)</span><b id="sAzimut">—</b></li>
+            <li><span>Inclinación</span><b id="sInclinacion">—</b></li>
+            <li><span>Factor orientación</span><b id="sFactorOrient">—</b></li>
+            <li><span>Factor calibración</span><b id="sFactorCal">—</b></li>
+            <li><span>Rendimiento estimado</span><b id="sRendimiento">—</b></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">ORIENTACIÓN DEL PANEL</div>
+          <div class="compass-wrap">
+            <svg viewBox="0 0 200 200" class="compass">
+              <circle cx="100" cy="100" r="90" class="compass-ring"/>
+              <circle cx="100" cy="100" r="60" class="compass-ring faint"/>
+              <text x="100" y="18" class="compass-n">N</text>
+              <text x="185" y="105" class="compass-dir">E</text>
+              <text x="100" y="192" class="compass-dir">S</text>
+              <text x="12" y="105" class="compass-dir">O</text>
+              <g id="panelGroup" transform="translate(100,100) rotate(0)">
+                <rect x="-22" y="-16" width="44" height="32" rx="3" class="panel-rect"/>
+                <line x1="0" y1="0" x2="0" y2="-55" class="panel-arrow"/>
+                <polygon points="0,-62 -7,-50 7,-50" class="panel-arrow-head"/>
+              </g>
+            </svg>
+            <div class="compass-info">
+              <div><span>Azimut</span><b id="cAzimut">—</b></div>
+              <div><span>Inclinación</span><b id="cInclinacion">—</b></div>
+              <div><span>Orientación</span><b id="cOrientacion">—</b></div>
+            </div>
+          </div>
+        </div>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='paneles_solares.js') }}"></script>
+{% endblock %}

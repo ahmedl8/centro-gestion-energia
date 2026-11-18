@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+      <section class="mid-row" style="grid-template-columns:1fr 1.2fr;">
+        <div class="card">
+          <div class="card-title">PREVISIÓN METEOROLÓGICA (3 DÍAS)</div>
+          <div class="weather-row" id="weatherRow"><!-- filled by JS --></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">PREVISIÓN ENERGÉTICA (3 DÍAS)</div>
+          <table class="energy-table">
+            <thead>
+              <tr><th>Día</th><th>Gen. (Wh)</th><th>Cons. (Wh)</th><th>Balance</th><th>Tours</th></tr>
+            </thead>
+            <tbody id="energyTableBody"></tbody>
+          </table>
+          <div class="balance-note" id="balanceNote" hidden>
+            ⓘ Balance negativo: posible descenso de batería.
+          </div>
+        </div>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='prevision.js') }}"></script>
+{% endblock %}

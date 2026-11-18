@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEV — Energy Monitor</title>
+<script src="{{ url_for('static', filename='chart.umd.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ───────────── SIDEBAR ───────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div>
+        <div class="brand-title">GEV</div>
+        <div class="brand-sub">ENERGY MONITOR</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item active" data-tip="">
+        <span class="nav-ico">▦</span> Dashboard
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">🔋</span> Baterías
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">🎥</span> Tours (Cámaras)
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">☁</span> Previsión del tiempo
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">☀</span> Paneles solares
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">📈</span> Histórico
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">🔔</span> Alertas
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">📡</span> Dispositivos
+      </a>
+      <a class="nav-item" data-tip="Próximamente">
+        <span class="nav-ico">⚙</span> Configuración
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="current-install">
+        <div class="ci-label">INSTALACIÓN ACTUAL</div>
+        <div class="ci-name">📍 <span id="sbInstNombre">—</span></div>
+        <div class="ci-cam" id="sbCamNombre">—</div>
+      </div>
+      <button class="btn-outline" id="btnCambiarInstalacion">⇄ Cambiar instalación</button>
+    </div>
+  </aside>
+
+  <!-- ───────────── MAIN ───────────── -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span id="bcInstalacion">Cargando…</span>
+        <span class="chev">›</span>
+        <span id="bcCamara">—</span>
+        <span class="badge" id="badgeOnline">…</span>
+      </div>
+      <div class="topbar-right">
+        <div class="last-update">
+          Última actualización: <b id="lastUpdateTime">—</b> &nbsp;|&nbsp; <span id="lastUpdateDate">—</span>
+        </div>
+        <button class="icon-btn" id="btnRefresh" title="Actualizar">⟳</button>
+        <div class="icon-btn bell">🔔<span class="dot" id="alertDot" hidden></span></div>
+      </div>
+    </header>
+
+    <div id="content" class="content">
+
+      <!-- KPI CARDS -->
+      <section class="kpi-row">
+        <div class="card kpi">
+          <div class="kpi-head"><span class="ico bg-green">🔋</span> ESTADO DE BATERÍA</div>
+          <div class="kpi-main"><span id="kpiSoc">—</span><span class="unit">%</span></div>
+          <div class="kpi-sub" id="kpiVoltaje">— V</div>
+          <div class="pill pill-green" id="kpiCargando" hidden>Cargando ⚡</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-head"><span class="ico bg-yellow">☀</span> ENERGÍA HOY</div>
+          <div class="kpi-main"><span id="kpiGen">—</span><span class="unit">Wh</span></div>
+          <div class="kpi-sub">Generación</div>
+          <div class="pill" id="kpiBalance">— Wh</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-head"><span class="ico bg-purple">📊</span> CONSUMO HOY</div>
+          <div class="kpi-main"><span id="kpiCons">—</span><span class="unit">Wh</span></div>
+          <div class="kpi-sub">Consumo total</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-head"><span class="ico bg-blue">📅</span> TOURS</div>
+          <div class="kpi-main"><span id="kpiToursDia">—</span><span class="unit">/ día</span></div>
+          <div class="kpi-sub" id="kpiCadaMin">Cada — min</div>
+          <div class="kpi-sub2">Horario: <b id="kpiHorario">—</b></div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-head"><span class="ico bg-green">🛡</span> ESTADO DEL SISTEMA</div>
+          <div class="kpi-main sys-ok" id="kpiSysEstado">—</div>
+          <div class="kpi-sub" id="kpiSysDetalle">—</div>
+        </div>
+      </section>
+
+      <!-- MIDDLE ROW -->
+      <section class="mid-row">
+
+        <div class="card">
+          <div class="card-title">ESTADO DE LA BATERÍA</div>
+          <div class="battery-detail">
+            <div class="gauge-wrap">
+              <svg viewBox="0 0 200 120" class="gauge">
+                <path d="M20,110 A80,80 0 0,1 180,110" class="gauge-bg"/>
+                <path id="gaugeArc" d="M20,110 A80,80 0 0,1 180,110" class="gauge-fg"/>
+              </svg>
+              <div class="gauge-label">
+                <div class="gauge-pct" id="gaugePct">—%</div>
+                <div class="gauge-sub">SoC (Estado de carga)</div>
+              </div>
+            </div>
+            <ul class="detail-list">
+              <li><span>Tipo de batería</span><b id="dTipoBat">—</b></li>
+              <li><span>Capacidad</span><b id="dCapacidad">—</b></li>
+              <li><span>Energía útil (estimada)</span><b id="dEnergiaUtil">—</b></li>
+              <li><span>Voltaje actual</span><b id="dVoltaje">—</b></li>
+              <li><span>Cargando</span><b id="dCargando">—</b></li>
+            </ul>
+          </div>
+          <div class="thresholds">Umbral bajo: 20% &nbsp;|&nbsp; Crítico: 10%</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">PREVISIÓN METEOROLÓGICA (3 DÍAS)</div>
+          <div class="weather-row" id="weatherRow"><!-- filled by JS --></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">PREVISIÓN ENERGÉTICA (3 DÍAS)</div>
+          <table class="energy-table">
+            <thead>
+              <tr><th>Día</th><th>Gen. (Wh)</th><th>Cons. (Wh)</th><th>Balance</th><th>Tours</th></tr>
+            </thead>
+            <tbody id="energyTableBody"></tbody>
+          </table>
+          <div class="balance-note" id="balanceNote" hidden>
+            ⓘ Balance negativo: posible descenso de batería.
+          </div>
+        </div>
+      </section>
+
+      <!-- BOTTOM ROW -->
+      <section class="bottom-row">
+        <div class="card">
+          <div class="card-title">CONFIGURACIÓN SOLAR</div>
+          <ul class="detail-list">
+            <li><span>Potencia del panel</span><b id="sPotencia">—</b></li>
+            <li><span>Azimut (orientación)</span><b id="sAzimut">—</b></li>
+            <li><span>Inclinación</span><b id="sInclinacion">—</b></li>
+            <li><span>Factor orientación</span><b id="sFactorOrient">—</b></li>
+            <li><span>Factor calibración</span><b id="sFactorCal">—</b></li>
+            <li><span>Rendimiento estimado</span><b id="sRendimiento">—</b></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">ORIENTACIÓN DEL PANEL</div>
+          <div class="compass-wrap">
+            <svg viewBox="0 0 200 200" class="compass">
+              <circle cx="100" cy="100" r="90" class="compass-ring"/>
+              <circle cx="100" cy="100" r="60" class="compass-ring faint"/>
+              <text x="100" y="18" class="compass-n">N</text>
+              <text x="185" y="105" class="compass-dir">E</text>
+              <text x="100" y="192" class="compass-dir">S</text>
+              <text x="12" y="105" class="compass-dir">O</text>
+              <g id="panelGroup" transform="translate(100,100) rotate(0)">
+                <rect x="-22" y="-16" width="44" height="32" rx="3" class="panel-rect"/>
+                <line x1="0" y1="0" x2="0" y2="-55" class="panel-arrow"/>
+                <polygon points="0,-62 -7,-50 7,-50" class="panel-arrow-head"/>
+              </g>
+            </svg>
+            <div class="compass-info">
+              <div><span>Azimut</span><b id="cAzimut">—</b></div>
+              <div><span>Inclinación</span><b id="cInclinacion">—</b></div>
+              <div><span>Orientación</span><b id="cOrientacion">—</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title-row">
+            <div class="card-title">HISTÓRICO SoC (7 DÍAS)</div>
+          </div>
+          <canvas id="socChart" height="180"></canvas>
+        </div>
+      </section>
+
+      <!-- TOURS TIMELINE -->
+      <section class="card tours-card">
+        <div class="card-title-row">
+          <div class="card-title">PRÓXIMOS TOURS PROGRAMADOS <span id="toursHorario">(Horario: —)</span></div>
+        </div>
+        <div class="tours-timeline" id="toursTimeline">
+          <div class="empty-note">Cargando tours…</div>
+        </div>
+        <div class="tours-footer">
+          Duración por tour: <b id="toursDuracion">—</b>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- SELECTOR MODAL -->
+<div class="modal-overlay" id="selectorOverlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <div>Cambiar instalación / cámara</div>
+      <button class="icon-btn" id="btnCloseSelector">✕</button>
+    </div>
+    <div class="modal-body" id="selectorBody">Cargando…</div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

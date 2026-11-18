@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+      <section class="card">
+        <div class="card-title-row">
+          <div class="card-title">DISPOSITIVOS — INVENTARIO DE CÁMARAS</div>
+        </div>
+        <table class="energy-table" id="tablaDispositivos">
+          <thead>
+            <tr>
+              <th>Instalación</th><th>Cámara</th><th>Modelo</th><th>Activada</th>
+              <th>Panel (W)</th><th>Batería</th><th>Última actualización</th>
+            </tr>
+          </thead>
+          <tbody id="tablaDispositivosBody">
+            <tr><td colspan="7" class="empty-note">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='dispositivos.js') }}"></script>
+{% endblock %}

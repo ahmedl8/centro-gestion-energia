@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<script src="{{ url_for('static', filename='chart.umd.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+      <section class="card">
+        <div class="card-title-row">
+          <div class="card-title">HISTÓRICO SoC — CÁMARA ACTUAL</div>
+          <select id="selDias" class="btn-outline" style="width:auto; padding:6px 10px;">
+            <option value="7">Últimos 7 días</option>
+            <option value="14">Últimos 14 días</option>
+            <option value="30">Últimos 30 días</option>
+          </select>
+        </div>
+        <canvas id="socChart" height="90"></canvas>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='historico.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+      <section class="mid-row" style="grid-template-columns:1fr 1.6fr;">
+        <div class="card">
+          <div class="card-title">ESTADO DE LA BATERÍA — CÁMARA ACTUAL</div>
+          <div class="battery-detail">
+            <div class="gauge-wrap">
+              <svg viewBox="0 0 200 120" class="gauge">
+                <path d="M20,110 A80,80 0 0,1 180,110" class="gauge-bg"/>
+                <path id="gaugeArc" d="M20,110 A80,80 0 0,1 180,110" class="gauge-fg"/>
+              </svg>
+              <div class="gauge-label">
+                <div class="gauge-pct" id="gaugePct">—%</div>
+                <div class="gauge-sub">SoC (Estado de carga)</div>
+              </div>
+            </div>
+            <ul class="detail-list">
+              <li><span>Tipo de batería</span><b id="dTipoBat">—</b></li>
+              <li><span>Capacidad</span><b id="dCapacidad">—</b></li>
+              <li><span>Energía útil (estimada)</span><b id="dEnergiaUtil">—</b></li>
+              <li><span>Voltaje actual</span><b id="dVoltaje">—</b></li>
+              <li><span>Cargando</span><b id="dCargando">—</b></li>
+              <li><span>Frescura del dato</span><b id="dFrescura">—</b></li>
+            </ul>
+          </div>
+          <div class="thresholds">Umbral bajo: 20% &nbsp;|&nbsp; Crítico: 10%</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title-row">
+            <div class="card-title">TODAS LAS BATERÍAS (FLOTA)</div>
+          </div>
+          <table class="energy-table" id="tablaBaterias">
+            <thead>
+              <tr>
+                <th>Instalación</th><th>Cámara</th><th>SoC</th><th>Voltaje</th>
+                <th>Cargando</th><th>Estado</th><th>Actualizado</th>
+              </tr>
+            </thead>
+            <tbody id="tablaBateriasBody">
+              <tr><td colspan="7" class="empty-note">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='baterias.js') }}"></script>
+{% endblock %}

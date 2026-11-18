@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+      <section class="bottom-row" style="grid-template-columns:1fr 1fr;">
+        <div class="card">
+          <div class="card-title">CONFIGURACIÓN DEL DISPOSITIVO — CÁMARA ACTUAL</div>
+          <ul class="detail-list">
+            <li><span>Instalación</span><b id="cfInstalacion">—</b></li>
+            <li><span>Modelo de cámara</span><b id="cfModelo">—</b></li>
+            <li><span>Consumo de la cámara</span><b id="cfConsumo">—</b></li>
+            <li><span>Tipo de batería</span><b id="cfBatTipo">—</b></li>
+            <li><span>Capacidad de batería</span><b id="cfBatAh">—</b></li>
+            <li><span>Tipo de cargador</span><b id="cfCargadorTipo">—</b></li>
+            <li><span>Corriente de carga</span><b id="cfCargadorA">—</b></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">CONFIGURACIÓN SOLAR</div>
+          <ul class="detail-list">
+            <li><span>Potencia del panel</span><b id="cfPanelW">—</b></li>
+            <li><span>Azimut</span><b id="cfAzimut">—</b></li>
+            <li><span>Inclinación</span><b id="cfInclinacion">—</b></li>
+            <li><span>Factor de calibración</span><b id="cfFactorCal">—</b></li>
+          </ul>
+          <div class="thresholds">
+            Esta vista es de solo lectura — el panel GEV no escribe en la base de datos.
+            Para modificar estos valores, edítalos directamente en la tabla <code>camaras</code>.
+          </div>
+        </div>
+      </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='configuracion.js') }}"></script>
+{% endblock %}
