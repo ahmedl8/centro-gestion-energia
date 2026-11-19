@@ -42,7 +42,7 @@ Separa configuración estática (la escribe el operario) de estado operacional (
 
 ## Ciclo del recolector
 
-1. **Previsión meteorológica** de 3 días (nubes, olas, viento) y hora de amanecer/atardecer, con las coordenadas de `instalaciones` (fallback a `INSTALACIONES_CONFIG` si son NULL).
+1. **Previsión meteorológica** de 3 días (nubes, olas, viento) y hora de amanecer/atardecer, con las coordenadas de `instalaciones` (fallback a `INSTALACIONES_CONFIG`, en `gev_config.py`, si son NULL).
 2. **Lectura de voltaje** por router RUT955/956 según `rut_tipo` (`cgi_input`, `cgi_lo_value` o `api`) sobre la entrada analógica configurada.
 3. **Estimación de SoC:** filtro exponencial sobre el voltaje bruto, con lógica de amanecer/atardecer y umbrales según química (`lead` o `lifepo4`). Devuelve voltaje filtrado, SoC, nota de calidad de la lectura y si está cargando.
 4. **Acumulador de carga 220 V:** horas de carga y Wh estimados del día; se resiembra desde la BD si el proceso se reinicia a mitad de jornada.
@@ -82,12 +82,22 @@ python3 main.py --solo-collector           # solo el recolector
 python3 collector/datos_tiempo.py --una-vez   # un único ciclo y termina
 ```
 
-Abre `http://localhost:5000`. En Windows, `tzdata` se instala automáticamente: el recolector depende de `Europe/Madrid` para su lógica de amanecer/atardecer.
+Abre `http://127.0.0.1:5000`. El panel sirve con waitress y escucha solo en local por defecto; `GEV_HOST`, `GEV_PORT` y `GEV_DEBUG=1` (solo desarrollo) lo ajustan. En Windows, `tzdata` se instala automáticamente: el recolector depende de `Europe/Madrid` para su lógica de amanecer/atardecer.
 
 ## Limitaciones y mejoras previstas
 
 - **SoC por voltaje.** No hay sensor de corriente (shunt) en las maletas, así que el SoC se estima solo por voltaje. Es suficiente para una alerta operativa, pero hereda las limitaciones habituales del método: curvas planas (sobre todo en LiFePO4), caídas de tensión bajo carga y dependencia de la temperatura. Por eso la calibración solo usa lecturas en reposo. Mejora prevista: sensor de corriente.
 - **El router es el único canal de lectura.** Si pierde la 4G o falla la entrada analógica, la cámara deja de reportar y el dato no distingue «router caído» de «batería agotada».
-- **Servidor de desarrollo.** `app.py` arranca con `debug=True` y el servidor de Flask, válido para la red local pero no para exponerlo. Antes de hacerlo hay que desactivar `debug`, usar un servidor WSGI de producción (waitress o gunicorn), añadir autenticación y servirlo tras HTTPS.
+- **Panel sin autenticación.** Sirve con waitress (sin `debug`) y escucha en `127.0.0.1`, pero no tiene login. Para exponerlo hay que ponerlo tras un proxy con autenticación y HTTPS.
+- **Credenciales del router en la URL.** El CGI de Teltonika exige usuario y contraseña en la query string. El recolector nunca registra la URL ni el texto de las excepciones (solo su tipo), pero el tráfico va en HTTP plano dentro de la red del router; conviene una VPN o la API REST de RUTOS cuando el firmware la ofrezca.
 - No se incluye el esquema SQL de `gev`; las tablas están descritas arriba.
 - Los nombres de instalaciones, coordenadas y parámetros de ejemplo son ficticios.
+
+## Tests
+
+```bash
+pip install -r requirements.txt
+python3 -m pytest -q
+```
+
+Cubren el horario compartido (`gev_config.py`), que los errores no filtren detalles internos, que la contraseña del router no aparezca en los logs, la lectura de voltaje (V y mV) y el cierre de conexiones. No necesitan base de datos.

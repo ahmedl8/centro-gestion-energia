@@ -23,15 +23,20 @@ Uso:
     pip install -r requirements.txt
     export GEV_DB_PASSWORD="tu_password"
     python3 app.py
-    -> http://localhost:5000
+    -> http://127.0.0.1:5000
+
+Opcionales: GEV_HOST (por defecto 127.0.0.1; usa 0.0.0.0 solo detrás de un
+proxy con autenticación), GEV_PORT (5000), GEV_DEBUG=1 (solo desarrollo).
 """
 
 import os
 import time
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, render_template, abort, request
 import mysql.connector
+
+from gev_config import horario_instalacion
 
 app = Flask(__name__)
 
@@ -42,7 +47,7 @@ def manejar_error(e):
     from werkzeug.exceptions import HTTPException
     if isinstance(e, HTTPException):
         return jsonify({"error": e.description}), e.code
-    return jsonify({"error": str(e) or type(e).__name__}), 500
+    return jsonify({"error": "Error interno del servidor"}), 500
 
 # ─────────────────────────────────────────────────────────────
 # Configuración BD — mismos parámetros que datos_tiempo.py
@@ -72,7 +77,7 @@ def query(sql, params=None, one=False, _retry=True):
     en RDS tras inactividad) se reintenta una vez con una conexión nueva."""
     try:
         conn = get_conn()
-    except mysql.connector.Error as e:
+    except mysql.connector.Error:
         if _retry:
             time.sleep(0.3)
             return query(sql, params, one, _retry=False)
@@ -85,7 +90,6 @@ def query(sql, params=None, one=False, _retry=True):
         cur.close()
         return (rows[0] if rows else None) if one else rows
     except mysql.connector.Error:
-        conn.close()
         if _retry:
             time.sleep(0.3)
             return query(sql, params, one, _retry=False)
@@ -97,22 +101,7 @@ def query(sql, params=None, one=False, _retry=True):
 
 # ─────────────────────────────────────────────────────────────
 # Horarios de vigilancia por instalación
-# (mismo criterio operativo que INSTALACIONES_CONFIG en
-#  datos_tiempo.py — no vive en la BD, así que se replica aquí
-#  solo para calcular la franja de tours en el panel).
-# ─────────────────────────────────────────────────────────────
-HORARIOS_INSTALACION = {
-    "site_a":     {"inicio": 14, "fin": 8, "duracion_tour_min": 5},
-    "site_b":       {"inicio": 15, "fin": 8, "duracion_tour_min": 5},
-    "site_c":    {"inicio": 15, "fin": 8, "duracion_tour_min": 5},
-    "site_d":    {"inicio": 15, "fin": 8, "duracion_tour_min": 5},
-    "office":     {"inicio": 8,  "fin": 20, "duracion_tour_min": 5},
-    "site_e":     {"inicio": 14, "fin": 8, "duracion_tour_min": 5},
-    "site_f":     {"inicio": 14, "fin": 8, "duracion_tour_min": 5},
-    "site_g":    {"inicio": 14, "fin": 8, "duracion_tour_min": 5},
-    "site_h": {"inicio": 15, "fin": 8, "duracion_tour_min": 5},
-}
-HORARIO_DEFAULT = {"inicio": 19, "fin": 7, "duracion_tour_min": 5}
+# El horario de tours vive en gev_config.py (compartido con el recolector).
 
 
 # ─────────────────────────────────────────────────────────────
@@ -273,7 +262,7 @@ def api_camara_detalle(cam_name):
     suspendido = freq_raw == "mal_tiempo"
     freq_min = None if suspendido else (int(freq_raw) if freq_raw else None)
 
-    horario = HORARIOS_INSTALACION.get(row["instalacion"], HORARIO_DEFAULT)
+    horario = horario_instalacion(row["instalacion"])
     tours_dia = None
     if freq_min:
         ventana_h = (horario["fin"] - horario["inicio"]) % 24
@@ -343,7 +332,7 @@ def api_camara_tours(cam_name):
         return jsonify({"suspendido": True, "tours": []})
 
     freq_min = int(freq_raw)
-    horario = HORARIOS_INSTALACION.get(cam["instalacion"], HORARIO_DEFAULT)
+    horario = horario_instalacion(cam["instalacion"])
 
     now = datetime.now()
     inicio_hoy = now.replace(hour=horario["inicio"] % 24, minute=0, second=0, microsecond=0)
@@ -449,4 +438,11 @@ def api_dispositivos():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
+    host = os.environ.get("GEV_HOST", "127.0.0.1")
+    port = int(os.environ.get("GEV_PORT", "5000"))
+    if os.environ.get("GEV_DEBUG") == "1":
+        # Solo desarrollo local: el depurador de Flask permite ejecutar código.
+        app.run(host="127.0.0.1", port=port, debug=True)
+    else:
+        from waitress import serve
+        serve(app, host=host, port=port, threads=8)

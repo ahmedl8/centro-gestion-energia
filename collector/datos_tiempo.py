@@ -38,6 +38,8 @@ from zoneinfo import ZoneInfo
 import requests
 import mysql.connector
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # ─────────────────────────────────────────────────────────────
 # BD — base de datos gev
 # Mismas variables de entorno que app.py (ver docstring superior);
@@ -53,10 +55,6 @@ DB_CONFIG = {
     'connect_timeout': 10,
 }
 
-if not DB_CONFIG['password']:
-    raise RuntimeError(
-        "Falta GEV_DB_PASSWORD. Define la variable de entorno antes de arrancar el recolector."
-    )
 
 TZ = ZoneInfo("Europe/Madrid")
 
@@ -69,17 +67,7 @@ TZ = ZoneInfo("Europe/Madrid")
 # está a NULL (p. ej. office y cámaras sin coordenadas rellenas).
 # La fuente de verdad son las coordenadas de la BD.
 # ─────────────────────────────────────────────────────────────
-INSTALACIONES_CONFIG = {
-    "site_a":     {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 14, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-    "site_b":       {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 15, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-    "site_c":    {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 15, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-    "site_d":    {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 15, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-    "office":     {"lat": None,    "lon": None,    "hora_inicio_tours":  8, "hora_fin_tours": 20, "freq_base_min": 30, "duracion_tour_min": 5},
-    "site_e":     {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 14, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-    "site_f":     {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 14, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-    "site_g":    {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 14, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-    "site_h": {"lat": 40.0, "lon": -3.0, "hora_inicio_tours": 15, "hora_fin_tours": 8,  "freq_base_min": 60, "duracion_tour_min": 5},
-}
+from gev_config import INSTALACIONES_CONFIG  # noqa: E402  (fuente única, compartida con app.py)
 
 # ─────────────────────────────────────────────────────────────
 # CONFIGURACIÓN FÍSICA — FALLBACK POR INSTALACIÓN
@@ -342,11 +330,17 @@ def leer_voltaje_rut(cam: dict) -> float | None:
 
 def _leer_voltaje_cgi(host: str, port, path: str,
                       passwd: str, io: str, cam_name: str) -> float | None:
-    """CGI directo — firmware antiguo e intermedio. 2 reintentos."""
-    url = f"http://{host}:{port}{path}?username=admin&password={passwd}&pin={io}"
+    """CGI directo — firmware antiguo e intermedio. 2 reintentos.
+
+    El CGI de Teltonika exige las credenciales en la query string. Por eso
+    NUNCA se registra la URL ni el texto de la excepción (las de `requests`
+    incluyen la URL completa con la contraseña): solo el tipo de error.
+    """
+    url = f"http://{host}:{port}{path}"
+    params = {"username": "admin", "password": passwd, "pin": io}
     for intento in range(2):
         try:
-            r = requests.get(url, timeout=8)
+            r = requests.get(url, params=params, timeout=8)
             if r.status_code != 200:
                 log.warning(f"[{cam_name}] HTTP {r.status_code} CGI (intento {intento+1})")
                 time.sleep(3)
@@ -357,10 +351,10 @@ def _leer_voltaje_cgi(host: str, port, path: str,
             return round(v, 1)
         except Exception as e:
             if intento < 1:
-                log.debug(f"[{cam_name}] Reintento CGI: {e}")
+                log.debug(f"[{cam_name}] Reintento CGI: {type(e).__name__}")
                 time.sleep(3)
             else:
-                log.warning(f"[{cam_name}] Sin lectura CGI tras 2 intentos ({host}): {e}")
+                log.warning(f"[{cam_name}] Sin lectura CGI tras 2 intentos ({host}): {type(e).__name__}")
     return None
 
 
@@ -384,10 +378,10 @@ def _leer_voltaje_api(cam_name: str, host: str, port,
             time.sleep(3)
         except Exception as e:
             if intento < 1:
-                log.debug(f"[{cam_name}] Reintento login API: {e}")
+                log.debug(f"[{cam_name}] Reintento login API: {type(e).__name__}")
                 time.sleep(3)
             else:
-                log.warning(f"[{cam_name}] Error login API ({host}) tras 2 intentos: {e}")
+                log.warning(f"[{cam_name}] Error login API ({host}) tras 2 intentos: {type(e).__name__}")
                 return None
     if not token:
         return None
@@ -958,6 +952,10 @@ def actualizar_carga_220v(
 # ═════════════════════════════════════════════════════════════
 
 def get_conn():
+    if not DB_CONFIG['password']:
+        raise RuntimeError(
+            "Falta GEV_DB_PASSWORD. Define la variable de entorno antes de arrancar el recolector."
+        )
     return mysql.connector.connect(**DB_CONFIG)
 
 
@@ -1202,7 +1200,6 @@ def ciclo():
                 continue
 
             p_now    = prevision.get("ahora",        {})
-            p_hoy    = prevision.get("hoy",           {})
             p_man    = prevision.get("manana",        {})
             p_pasado = prevision.get("pasado_manana", {})
             p_sol    = prevision.get("sol",           {})
@@ -1362,7 +1359,11 @@ def main():
     else:
         log.info(f"Bucle continuo — intervalo {args.intervalo}s")
         while True:
-            ciclo()
+            try:
+                ciclo()
+            except Exception:
+                # Un ciclo fallido (BD caída, red…) no debe parar el recolector.
+                log.exception("Ciclo fallido; se reintenta en el siguiente intervalo")
             time.sleep(args.intervalo)
 
 
